@@ -11,7 +11,7 @@ def get_prompt(model, tokenizer):
         "<copyright></copyright>"
         "<character></character>"
         "<|rating:general|><|aspect_ratio:tall|><|length:long|>"
-        "<general>1girl"
+        "<general>"
     )
     inputs = tokenizer(prompt, return_tensors="pt").input_ids
     with torch.no_grad():

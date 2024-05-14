@@ -52,11 +52,25 @@ def create_zip(image_dir, caption_dir, zip_name):
             os.remove(file_path)
     print(f"Created zip file {zip_name}")
 
-def upload_to_hf(zip_file, repo_name, token):
+def check_repository_access(repo_name, token):
     api = HfApi()
     try:
-        user_info = api.whoami(token)
-        print(f"Token is valid. User: {user_info['name']}")
+        repo_info = api.repo_info(repo_name, token=token)
+        if repo_info.private:
+            print("Repository access verified. The repository is private.")
+        else:
+            print("Repository access verified. The repository is public.")
+        return True
+    except Exception as e:
+        print(f"Unable to access repository: {e}")
+        return False
+
+def upload_to_hf(zip_file, repo_name, token):
+    if not check_repository_access(repo_name, token):
+        print("Access denied or invalid repository. Stopping execution.")
+        exit(1)
+    api = HfApi()
+    try:
         repo_url = api.create_repo(repo_name, private=False, exist_ok=True, token=token)
         repo = Repository(repo_name, clone_from=repo_url, use_auth_token=token)
         repo.git_pull()
@@ -66,8 +80,7 @@ def upload_to_hf(zip_file, repo_name, token):
         os.remove(zip_file)
         print(f"Uploaded {zip_file} to Hf repository {repo_name}")
     except Exception as e:
-        print(f"Error: {e}")
-        print("Invalid token or other error occurred. Stopping execution.")
+        print(f"Error during upload: {e}")
         exit(1)
 
 if __name__ == '__main__':
@@ -86,7 +99,6 @@ if __name__ == '__main__':
     os.makedirs(image_dir, exist_ok=True)
     os.makedirs(caption_dir, exist_ok=True)
 
-    # User inputs their Hugging Face repository name and token
     repo_name = input("Please enter your Hugging Face repository name: ")
     token = input("Please enter your Hugging Face API token: ")
 

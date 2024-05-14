@@ -7,7 +7,7 @@ from huggingface_hub import HfApi, HfFolder, Repository
 
 def get_prompt(model):
     prompt = (
-        f"<|bos|>"
+        f"<|bos|>sfw"
         f"<copyright></copyright>"
         f"<character></character>"
         f"<|rating:general|><|aspect_ratio:tall|><|length:long|>"
@@ -27,7 +27,7 @@ def get_prompt(model):
     return ", ".join([tag for tag in tokenizer.batch_decode(outputs[0], skip_special_tokens=True) if tag.strip() != ""])
 
 def make_image(pipe, prompt):
-    negative_prompt = "lowres, error, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, blurry"
+    negative_prompt = "lowres, error, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, blurry, bad anatomy,long_body,mutated hands,missing arms,extra_arms,extra_legs,bad hands,missing_limb,disconnected_limbs,extra_fingers,missing fingers,liquid fingers,ugly face,deformed eyes,cropped"
     image = pipe(prompt=prompt, negative_prompt=negative_prompt).images[0]
     return image
 

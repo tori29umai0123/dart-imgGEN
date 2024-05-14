@@ -2,17 +2,20 @@ import torch
 import zipfile
 import os
 import shutil
+import random
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from diffusers import AutoPipelineForText2Image
 from huggingface_hub import HfApi, Repository, upload_file, create_repo
 
 def get_prompt(model, tokenizer):
+    random_list = ["scenery", "1girl", "1boy"]
+    random_choice = random.choice(random_list)
     prompt = (
         "sfw"
         "<copyright></copyright>"
         "<character></character>"
         "<|rating:general|><|aspect_ratio:tall|><|length:long|>"
-        "<general>"
+        f"<general>{random_choice}"
     )
     inputs = tokenizer(prompt, return_tensors="pt").input_ids
     with torch.no_grad():
@@ -92,6 +95,15 @@ def upload_to_hf(zip_file, repo_name, token):
         print(f"Error during upload: {e}")
         exit(1)
 
+def get_last_processed_index(repo_local_path):
+    zip_files = [f for f in os.listdir(repo_local_path) if f.startswith('images_') and f.endswith('.zip')]
+    if not zip_files:
+        return -1
+    zip_files.sort()
+    last_zip = zip_files[-1]
+    last_index = int(last_zip.split('_')[-1].split('.')[0]) * 1000 - 1
+    return last_index
+
 if __name__ == '__main__':
     MODEL_NAME = "p1atdev/dart-v2-base"
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
@@ -115,7 +127,20 @@ if __name__ == '__main__':
         print("Access denied or invalid repository. Stopping execution.")
         exit(1)
 
-    for idx in range(30000):
+    repo_local_path = os.path.join(os.getcwd(), repo_name.split('/')[-1])
+    try:
+        # Try to clone the repository
+        if not os.path.exists(repo_local_path):
+            print(f"Cloning repository {repo_name}...")
+            Repository(repo_local_path, clone_from=f"https://huggingface.co/datasets/{repo_name}", use_auth_token=token)
+    except Exception as e:
+        print(f"Repository not found, creating new repository {repo_name}...")
+        create_repo(repo_name, token=token, repo_type='dataset', exist_ok=True)
+        Repository(repo_local_path, clone_from=f"https://huggingface.co/datasets/{repo_name}", use_auth_token=token)
+    
+    last_index = get_last_processed_index(repo_local_path)
+
+    for idx in range(last_index + 1, 30000):
         prompt = get_prompt(model, tokenizer)
         image = make_image(pipe, prompt)
         image_path, caption_path = save_files(image, prompt, idx, image_dir, caption_dir)

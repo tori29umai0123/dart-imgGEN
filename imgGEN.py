@@ -42,31 +42,33 @@ def save_files(image, prompt, index, image_dir, caption_dir):
 
 def create_zip(image_dir, caption_dir, zip_name):
     with zipfile.ZipFile(zip_name, 'w') as z:
-        # Add images to the zip file
         for file in os.listdir(image_dir):
             file_path = os.path.join(image_dir, file)
             z.write(file_path, arcname=os.path.join('images', file))
-            os.remove(file_path)  # Delete the file after adding it to the zip
-
-        # Add captions to the zip file
+            os.remove(file_path)
         for file in os.listdir(caption_dir):
             file_path = os.path.join(caption_dir, file)
             z.write(file_path, arcname=os.path.join('captions', file))
-            os.remove(file_path)  # Delete the file after adding it to the zip
-
+            os.remove(file_path)
     print(f"Created zip file {zip_name}")
 
-def upload_to_hf(zip_file, repo_name):
+def upload_to_hf(zip_file, repo_name, token):
     api = HfApi()
-    token = HfFolder.get_token()
-    repo_url = api.create_repo(repo_name, private=False, exist_ok=True, token=token)
-    repo = Repository(repo_name, clone_from=repo_url, use_auth_token=token)
-    repo.git_pull()
-    repo.git_add(zip_file)
-    repo.git_commit("Add new images and captions")
-    repo.git_push()
-    os.remove(zip_file)  # Delete the zip file after uploading
-    print(f"Uploaded {zip_file} to Hf repository {repo_name}")
+    try:
+        user_info = api.whoami(token)
+        print(f"Token is valid. User: {user_info['name']}")
+        repo_url = api.create_repo(repo_name, private=False, exist_ok=True, token=token)
+        repo = Repository(repo_name, clone_from=repo_url, use_auth_token=token)
+        repo.git_pull()
+        repo.git_add(zip_file)
+        repo.git_commit("Add new images and captions")
+        repo.git_push()
+        os.remove(zip_file)
+        print(f"Uploaded {zip_file} to Hf repository {repo_name}")
+    except Exception as e:
+        print(f"Error: {e}")
+        print("Invalid token or other error occurred. Stopping execution.")
+        exit(1)
 
 if __name__ == '__main__':
     MODEL_NAME = "p1atdev/dart-v2-base"
@@ -83,13 +85,17 @@ if __name__ == '__main__':
     caption_dir = "./data/caption"
     os.makedirs(image_dir, exist_ok=True)
     os.makedirs(caption_dir, exist_ok=True)
-    
+
+    # User inputs their Hugging Face repository name and token
+    repo_name = input("Please enter your Hugging Face repository name: ")
+    token = input("Please enter your Hugging Face API token: ")
+
     for idx in range(30000):
         prompt = get_prompt(model, tokenizer)
         image = make_image(pipe, prompt)
         image_path, caption_path = save_files(image, prompt, idx, image_dir, caption_dir)
-        
+
         if (idx + 1) % 1000 == 0:
             zip_name = f"./data/images_{idx // 1000 + 1}.zip"
             create_zip(image_dir, caption_dir, zip_name)
-            upload_to_hf(zip_name, "your_hf_organization/your_model_name")
+            upload_to_hf(zip_name, repo_name, token)

@@ -1,4 +1,4 @@
-﻿import torch
+import torch
 import zipfile
 import os
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -48,9 +48,8 @@ def create_zip(folder_path, zip_name):
             os.remove(file_path)  # Delete the file after adding it to the zip
     print(f"Created zip file {zip_name}")
 
-def upload_to_hf(zip_file, repo_name):
+def upload_to_hf(zip_file, repo_name, token):
     api = HfApi()
-    token = HfFolder.get_token()
     repo_url = api.create_repo(repo_name, private=False, exist_ok=True, token=token)
     repo = Repository(repo_name, clone_from=repo_url, use_auth_token=token)
     repo.git_pull()
@@ -75,7 +74,10 @@ if __name__ == '__main__':
     caption_dir = "./data/caption"
     os.makedirs(image_dir, exist_ok=True)
     os.makedirs(caption_dir, exist_ok=True)
-    
+
+    # User inputs their Hugging Face API token
+    api_token = input("Please enter your Hugging Face API token: ")
+
     for idx in range(30000):
         prompt = get_prompt(model, tokenizer)
         image = make_image(pipe, prompt)
@@ -84,4 +86,4 @@ if __name__ == '__main__':
         if (idx + 1) % 1000 == 0:
             zip_name = f"./data/images_{idx // 1000 + 1}.zip"
             create_zip("./data", zip_name)
-            upload_to_hf(zip_name, "your_hf_organization/your_model_name")
+            upload_to_hf(zip_name, "your_hf_organization/your_model_name", api_token)

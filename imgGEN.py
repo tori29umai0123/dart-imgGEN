@@ -11,7 +11,7 @@ def get_prompt(model, tokenizer):
     random_list = ["scenery", "1girl", "1boy"]
     random_choice = random.choice(random_list)
     prompt = (
-        "sfw"
+        f"<|bos|>"
         "<copyright></copyright>"
         "<character></character>"
         "<|rating:general|><|aspect_ratio:tall|><|length:long|>"

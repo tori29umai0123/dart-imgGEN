@@ -1,9 +1,10 @@
 import torch
 import zipfile
 import os
+import shutil
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from diffusers import AutoPipelineForText2Image
-from huggingface_hub import HfApi, Repository
+from huggingface_hub import HfApi, Repository, upload_file, create_repo
 
 def get_prompt(model, tokenizer):
     prompt = (
@@ -33,16 +34,17 @@ def make_image(pipe, prompt):
 
 def save_files(image, prompt, index, image_dir, caption_dir):
     formatted_index = str(index + 1).zfill(5)
-    image_path = f"{image_dir}/{formatted_index}.png"
+    image_path = os.path.abspath(f"{image_dir}/{formatted_index}.png")
     image.save(image_path)
-    caption_path = f"{caption_dir}/{formatted_index}.txt"
+    caption_path = os.path.abspath(f"{caption_dir}/{formatted_index}.txt")
     with open(caption_path, mode='w') as f:
         f.write(prompt)
     print(f"Saved image and caption for index {formatted_index}")
     return image_path, caption_path
 
 def create_zip(image_dir, caption_dir, zip_name):
-    with zipfile.ZipFile(zip_name, 'w') as z:
+    zip_path = os.path.abspath(zip_name)
+    with zipfile.ZipFile(zip_path, 'w') as z:
         # Save images
         for file in os.listdir(image_dir):
             file_path = os.path.join(image_dir, file)
@@ -55,7 +57,8 @@ def create_zip(image_dir, caption_dir, zip_name):
             if os.path.isfile(file_path):  # Check if it's a file
                 z.write(file_path, arcname=os.path.join('captions', file))
                 os.remove(file_path)
-    print(f"Created zip file {zip_name}")
+    print(f"Created zip file {zip_path}")
+    return zip_path
 
 def check_repository_access(repo_name, token):
     api = HfApi()
@@ -68,15 +71,21 @@ def check_repository_access(repo_name, token):
         return False
 
 def upload_to_hf(zip_file, repo_name, token):
-    api = HfApi()
     try:
-        # リポジトリタイプをデータセットとして指定
-        repo_url = api.create_repo(repo_name, private=False, exist_ok=True, token=token, repo_type='dataset')
-        repo = Repository(repo_name, clone_from=repo_url, use_auth_token=token, repo_type='dataset')
-        repo.git_pull()
-        repo.git_add(zip_file)
-        repo.git_commit("Add new dataset images and captions")
-        repo.git_push()
+        create_repo(repo_name, token=token, repo_type='dataset', exist_ok=True)
+        repo_local_path = os.path.join(os.getcwd(), repo_name.split('/')[-1])
+        
+        # Clone the repo if it doesn't exist locally
+        if not os.path.exists(repo_local_path):
+            repo_local_path = os.path.abspath(repo_name.split('/')[-1])
+            Repository(repo_local_path, clone_from=f"https://huggingface.co/datasets/{repo_name}", use_auth_token=token)
+        
+        # Move the zip file to the repository directory
+        shutil.copy(zip_file, repo_local_path)
+        repo_zip_path = os.path.join(repo_local_path, os.path.basename(zip_file))
+        
+        # Upload the file
+        upload_file(path_or_fileobj=repo_zip_path, path_in_repo=os.path.basename(repo_zip_path), repo_id=repo_name, token=token, repo_type='dataset')
         os.remove(zip_file)
         print(f"Uploaded {zip_file} to Hf dataset repository {repo_name}")
     except Exception as e:
@@ -113,5 +122,5 @@ if __name__ == '__main__':
 
         if (idx + 1) % 1000 == 0:
             zip_name = f"./data/images_{idx // 1000 + 1}.zip"
-            create_zip(image_dir, caption_dir, zip_name)
-            upload_to_hf(zip_name, repo_name, token)
+            zip_path = create_zip(image_dir, caption_dir, zip_name)
+            upload_to_hf(zip_path, repo_name, token)

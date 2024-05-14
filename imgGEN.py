@@ -31,7 +31,7 @@ def get_prompt(model, tokenizer):
     return ", ".join([tag for tag in tokenizer.batch_decode(outputs[0], skip_special_tokens=True) if tag.strip() != ""])
 
 def make_image(pipe, prompt):
-    negative_prompt = "lowres, error, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, blurry, bad anatomy, long body, mutated hands, missing arms, extra arms, extra legs, bad hands, missing limb, disconnected limbs, extra fingers, missing fingers, liquid fingers, ugly face, deformed eyes, cropped"
+    negative_prompt = "lowres, error, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, blurry"
     image = pipe(prompt=prompt, negative_prompt=negative_prompt).images[0]
     return image
 

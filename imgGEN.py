@@ -56,7 +56,7 @@ def create_zip(image_dir, caption_dir, zip_name):
 def check_repository_access(repo_name, token):
     api = HfApi()
     try:
-        repo_info = api.repo_info(repo_name, token=token, repo_type='dataset'))
+        repo_info = api.repo_info(repo_name, token=token, repo_type='dataset')
         print("Repository access verified.")
         return True
     except Exception as e:

@@ -40,21 +40,30 @@ def save_files(image, prompt, index, image_dir, caption_dir):
     print(f"Saved image and caption for index {index}")
     return image_path, caption_path
 
-def create_zip(folder_path, zip_name):
+def create_zip(image_dir, caption_dir, zip_name):
     with zipfile.ZipFile(zip_name, 'w') as z:
-        for file in os.listdir(folder_path):
-            file_path = os.path.join(folder_path, file)
-            z.write(file_path, file)
+        # Add images to the zip file
+        for file in os.listdir(image_dir):
+            file_path = os.path.join(image_dir, file)
+            z.write(file_path, arcname=os.path.join('images', file))
             os.remove(file_path)  # Delete the file after adding it to the zip
+
+        # Add captions to the zip file
+        for file in os.listdir(caption_dir):
+            file_path = os.path.join(caption_dir, file)
+            z.write(file_path, arcname=os.path.join('captions', file))
+            os.remove(file_path)  # Delete the file after adding it to the zip
+
     print(f"Created zip file {zip_name}")
 
-def upload_to_hf(zip_file, repo_name, token):
+def upload_to_hf(zip_file, repo_name):
     api = HfApi()
+    token = HfFolder.get_token()
     repo_url = api.create_repo(repo_name, private=False, exist_ok=True, token=token)
     repo = Repository(repo_name, clone_from=repo_url, use_auth_token=token)
     repo.git_pull()
     repo.git_add(zip_file)
-    repo.git_commit("Add new images")
+    repo.git_commit("Add new images and captions")
     repo.git_push()
     os.remove(zip_file)  # Delete the zip file after uploading
     print(f"Uploaded {zip_file} to Hf repository {repo_name}")
@@ -74,10 +83,7 @@ if __name__ == '__main__':
     caption_dir = "./data/caption"
     os.makedirs(image_dir, exist_ok=True)
     os.makedirs(caption_dir, exist_ok=True)
-
-    # User inputs their Hugging Face API token
-    api_token = input("Please enter your Hugging Face API token: ")
-
+    
     for idx in range(30000):
         prompt = get_prompt(model, tokenizer)
         image = make_image(pipe, prompt)
@@ -85,5 +91,5 @@ if __name__ == '__main__':
         
         if (idx + 1) % 1000 == 0:
             zip_name = f"./data/images_{idx // 1000 + 1}.zip"
-            create_zip("./data", zip_name)
-            upload_to_hf(zip_name, "your_hf_organization/your_model_name", api_token)
+            create_zip(image_dir, caption_dir, zip_name)
+            upload_to_hf(zip_name, "your_hf_organization/your_model_name")

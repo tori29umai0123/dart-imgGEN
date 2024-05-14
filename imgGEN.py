@@ -43,14 +43,18 @@ def save_files(image, prompt, index, image_dir, caption_dir):
 
 def create_zip(image_dir, caption_dir, zip_name):
     with zipfile.ZipFile(zip_name, 'w') as z:
+        # Save images
         for file in os.listdir(image_dir):
             file_path = os.path.join(image_dir, file)
-            z.write(file_path, arcname=os.path.join('images', file))
-            os.remove(file_path)
+            if os.path.isfile(file_path):  # Check if it's a file
+                z.write(file_path, arcname=os.path.join('images', file))
+                os.remove(file_path)
+        # Save captions
         for file in os.listdir(caption_dir):
             file_path = os.path.join(caption_dir, file)
-            z.write(file_path, arcname=os.path.join('captions', file))
-            os.remove(file_path)
+            if os.path.isfile(file_path):  # Check if it's a file
+                z.write(file_path, arcname=os.path.join('captions', file))
+                os.remove(file_path)
     print(f"Created zip file {zip_name}")
 
 def check_repository_access(repo_name, token):

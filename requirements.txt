@@ -1,4 +1,5 @@
 transformers
 diffusers
 Pillow
+pip install accelerat
 huggingface_hub

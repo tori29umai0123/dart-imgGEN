@@ -3,7 +3,7 @@ import zipfile
 import os
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from diffusers import AutoPipelineForText2Image
-from huggingface_hub import HfApi, HfFolder, Repository
+from huggingface_hub import HfApi, Repository
 
 def get_prompt(model, tokenizer):
     prompt = (
@@ -33,9 +33,9 @@ def make_image(pipe, prompt):
 
 def save_files(image, prompt, index, image_dir, caption_dir):
     formatted_index = str(index + 1).zfill(5)
-    image_path = f"{image_dir}/image_{formatted_index}.png"
+    image_path = f"{image_dir}/{formatted_index}.png"
     image.save(image_path)
-    caption_path = f"{caption_dir}/caption_{formatted_index}.txt"
+    caption_path = f"{caption_dir}/{formatted_index}.txt"
     with open(caption_path, mode='w') as f:
         f.write(prompt)
     print(f"Saved image and caption for index {formatted_index}")
@@ -57,19 +57,13 @@ def check_repository_access(repo_name, token):
     api = HfApi()
     try:
         repo_info = api.repo_info(repo_name, token=token)
-        if repo_info.private:
-            print("Repository access verified. The repository is private.")
-        else:
-            print("Repository access verified. The repository is public.")
+        print("Repository access verified.")
         return True
     except Exception as e:
         print(f"Unable to access repository: {e}")
         return False
 
 def upload_to_hf(zip_file, repo_name, token):
-    if not check_repository_access(repo_name, token):
-        print("Access denied or invalid repository. Stopping execution.")
-        exit(1)
     api = HfApi()
     try:
         repo_url = api.create_repo(repo_name, private=False, exist_ok=True, token=token)
@@ -102,6 +96,10 @@ if __name__ == '__main__':
 
     repo_name = input("Please enter your Hugging Face repository name: ")
     token = input("Please enter your Hugging Face API token: ")
+
+    if not check_repository_access(repo_name, token):
+        print("Access denied or invalid repository. Stopping execution.")
+        exit(1)
 
     for idx in range(30000):
         prompt = get_prompt(model, tokenizer)

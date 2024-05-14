@@ -5,13 +5,13 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from diffusers import AutoPipelineForText2Image
 from huggingface_hub import HfApi, HfFolder, Repository
 
-def get_prompt(model):
+def get_prompt(model, tokenizer):
     prompt = (
-        f"<|bos|>sfw"
-        f"<copyright></copyright>"
-        f"<character></character>"
-        f"<|rating:general|><|aspect_ratio:tall|><|length:long|>"
-        f"<general>1girl"
+        "sfw"
+        "<copyright></copyright>"
+        "<character></character>"
+        "<|rating:general|><|aspect_ratio:tall|><|length:long|>"
+        "<general>1girl"
     )
     inputs = tokenizer(prompt, return_tensors="pt").input_ids
     with torch.no_grad():
@@ -27,20 +27,25 @@ def get_prompt(model):
     return ", ".join([tag for tag in tokenizer.batch_decode(outputs[0], skip_special_tokens=True) if tag.strip() != ""])
 
 def make_image(pipe, prompt):
-    negative_prompt = "lowres, error, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, blurry, bad anatomy,long_body,mutated hands,missing arms,extra_arms,extra_legs,bad hands,missing_limb,disconnected_limbs,extra_fingers,missing fingers,liquid fingers,ugly face,deformed eyes,cropped"
+    negative_prompt = "lowres, error, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, blurry, bad anatomy, long body, mutated hands, missing arms, extra arms, extra legs, bad hands, missing limb, disconnected limbs, extra fingers, missing fingers, liquid fingers, ugly face, deformed eyes, cropped"
     image = pipe(prompt=prompt, negative_prompt=negative_prompt).images[0]
     return image
 
 def save_files(image, prompt, index, image_dir, caption_dir):
-    image.save(f"{image_dir}/image_{index}.png")
-    with open(f"{caption_dir}/caption_{index}.txt", mode='w') as f:
+    image_path = f"{image_dir}/image_{index}.png"
+    image.save(image_path)
+    caption_path = f"{caption_dir}/caption_{index}.txt"
+    with open(caption_path, mode='w') as f:
         f.write(prompt)
     print(f"Saved image and caption for index {index}")
+    return image_path, caption_path
 
 def create_zip(folder_path, zip_name):
     with zipfile.ZipFile(zip_name, 'w') as z:
         for file in os.listdir(folder_path):
-            z.write(os.path.join(folder_path, file), file)
+            file_path = os.path.join(folder_path, file)
+            z.write(file_path, file)
+            os.remove(file_path)  # Delete the file after adding it to the zip
     print(f"Created zip file {zip_name}")
 
 def upload_to_hf(zip_file, repo_name):
@@ -52,6 +57,7 @@ def upload_to_hf(zip_file, repo_name):
     repo.git_add(zip_file)
     repo.git_commit("Add new images")
     repo.git_push()
+    os.remove(zip_file)  # Delete the zip file after uploading
     print(f"Uploaded {zip_file} to Hf repository {repo_name}")
 
 if __name__ == '__main__':
@@ -73,7 +79,7 @@ if __name__ == '__main__':
     for idx in range(30000):
         prompt = get_prompt(model, tokenizer)
         image = make_image(pipe, prompt)
-        save_files(image, prompt, idx, image_dir, caption_dir)
+        image_path, caption_path = save_files(image, prompt, idx, image_dir, caption_dir)
         
         if (idx + 1) % 1000 == 0:
             zip_name = f"./data/images_{idx // 1000 + 1}.zip"

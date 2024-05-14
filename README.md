@@ -15,6 +15,9 @@ https://hub.docker.com/layers/pytorch/pytorch/2.2.0-cuda12.1-cudnn8-devel/images
 git clone https://github.com/tori29umai0123/dart-imgGEN.git
 cd dart-imgGEN
 pip install -r requirements.txt
+sudo apt update
+sudo apt install git-lfs
+git lfs install
 ```
 ### 4. Hugging Face アカウント設定
 

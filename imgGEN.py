@@ -32,12 +32,13 @@ def make_image(pipe, prompt):
     return image
 
 def save_files(image, prompt, index, image_dir, caption_dir):
-    image_path = f"{image_dir}/image_{index}.png"
+    formatted_index = str(index + 1).zfill(5)
+    image_path = f"{image_dir}/image_{formatted_index}.png"
     image.save(image_path)
-    caption_path = f"{caption_dir}/caption_{index}.txt"
+    caption_path = f"{caption_dir}/caption_{formatted_index}.txt"
     with open(caption_path, mode='w') as f:
         f.write(prompt)
-    print(f"Saved image and caption for index {index}")
+    print(f"Saved image and caption for index {formatted_index}")
     return image_path, caption_path
 
 def create_zip(image_dir, caption_dir, zip_name):

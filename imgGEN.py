@@ -66,14 +66,15 @@ def check_repository_access(repo_name, token):
 def upload_to_hf(zip_file, repo_name, token):
     api = HfApi()
     try:
-        repo_url = api.create_repo(repo_name, private=False, exist_ok=True, token=token)
-        repo = Repository(repo_name, clone_from=repo_url, use_auth_token=token)
+        # リポジトリタイプをデータセットとして指定
+        repo_url = api.create_repo(repo_name, private=False, exist_ok=True, token=token, repo_type='dataset')
+        repo = Repository(repo_name, clone_from=repo_url, use_auth_token=token, repo_type='dataset')
         repo.git_pull()
         repo.git_add(zip_file)
-        repo.git_commit("Add new images and captions")
+        repo.git_commit("Add new dataset images and captions")
         repo.git_push()
         os.remove(zip_file)
-        print(f"Uploaded {zip_file} to Hf repository {repo_name}")
+        print(f"Uploaded {zip_file} to Hf dataset repository {repo_name}")
     except Exception as e:
         print(f"Error during upload: {e}")
         exit(1)

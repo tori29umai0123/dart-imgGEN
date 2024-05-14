@@ -8,14 +8,12 @@ from diffusers import AutoPipelineForText2Image
 from huggingface_hub import HfApi, Repository, upload_file, create_repo
 
 def get_prompt(model, tokenizer):
-    random_list = ["scenery", "1girl", "1boy"]
-    random_choice = random.choice(random_list)
     prompt = (
         f"<|bos|>"
-        "<copyright></copyright>"
-        "<character></character>"
-        "<|rating:general|><|aspect_ratio:tall|><|length:long|>"
-        f"<general>{random_choice}"
+        f"<copyright></copyright>"
+        f"<character></character>"
+        f"<|rating:general|><|aspect_ratio:tall|><|length:long|>"
+        f"<general>"
     )
     inputs = tokenizer(prompt, return_tensors="pt").input_ids
     with torch.no_grad():

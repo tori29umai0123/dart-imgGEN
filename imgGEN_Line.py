@@ -6,7 +6,7 @@ import random
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from diffusers import AutoPipelineForImage2Image
 from huggingface_hub import HfApi, Repository, upload_file, create_repo
-
+from PIL import Image
 
 # 画像生成用のプロンプトを生成する関数
 def get_prompt(model, tokenizer):

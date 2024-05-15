@@ -36,7 +36,7 @@ def get_prompt(model, tokenizer):
 
 def make_image(pipe, prompt, base_pil):
     negative_prompt = "nsfw, text, logo, bad composition, lowres, low quality, worst quality, low effort, watermark, signature, ugly, poorly drawn"
-    image = pipe(prompt=prompt, image=base_pil, negative_prompt=negative_prompt).images[0]
+    image = pipe(prompt=prompt, image=base_pil, negative_prompt=negative_prompt,strength=1.0).images[0]
     return image
 
 def save_files(image, prompt, index, image_dir, caption_dir):

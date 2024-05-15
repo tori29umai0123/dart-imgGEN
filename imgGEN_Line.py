@@ -10,7 +10,7 @@ from huggingface_hub import HfApi, Repository, upload_file, create_repo
 
 # 画像生成用のプロンプトを生成する関数
 def get_prompt(model, tokenizer):
-    random_list = ["no humans, scenery", "1girl", "1boy", ""]
+    random_list = ["monochrome, greyscale, lineart, no humans, scenery", "monochrome, greyscale, lineart, 1girl", "monochrome, greyscale, lineart, 1boy"]
     random_choice = random.choice(random_list)
     prompt = (
         f"<|bos|>"

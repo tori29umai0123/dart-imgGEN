@@ -7,14 +7,19 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from diffusers import AutoPipelineForText2Image
 from huggingface_hub import HfApi, Repository, upload_file, create_repo
 
+
+# 画像生成用のプロンプトを生成する関数
 def get_prompt(model, tokenizer):
+    random_list = ["no humans, scenery", "1girl", "1boy", ""]
+    random_choice = random.choice(random_list)
     prompt = (
         f"<|bos|>"
-        f"<copyright></copyright>"
-        f"<character></character>"
-        f"<|rating:general|><|aspect_ratio:tall|><|length:long|>"
-        f"<general>"
+        "<copyright></copyright>"
+        "<character></character>"
+        "<|rating:general|><|aspect_ratio:square|><|length:short|>"
+        f"<general>{random_choice}"
     )
+
     inputs = tokenizer(prompt, return_tensors="pt").input_ids
     with torch.no_grad():
         outputs = model.generate(
@@ -27,9 +32,10 @@ def get_prompt(model, tokenizer):
             num_beams=1,
         )
     return ", ".join([tag for tag in tokenizer.batch_decode(outputs[0], skip_special_tokens=True) if tag.strip() != ""])
+    
 
 def make_image(pipe, prompt):
-    negative_prompt = "lowres, error, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, blurry"
+    negative_prompt = "nsfw, text, logo, bad composition, lowres, low quality, worst quality, low effort, watermark, signature, ugly, poorly drawn"
     image = pipe(prompt=prompt, negative_prompt=negative_prompt).images[0]
     return image
 

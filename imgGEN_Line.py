@@ -119,7 +119,7 @@ if __name__ == '__main__':
         use_safetensors=True
     ).to("cuda")
 
-    pipe.load_lora_weights("tori29umai/lineart", weight_name="sdxl_BWLine.safetensors, adapter_name="sdxl_BWLine")
+    pipe.load_lora_weights("tori29umai/lineart", weight_name="sdxl_BWLine.safetensors", adapter_name="sdxl_BWLine")
     pipe.fuse_lora(lora_scale=0.5)
 
     image_dir = "./data/image"

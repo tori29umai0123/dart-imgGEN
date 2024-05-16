@@ -2,6 +2,20 @@
 `dart-imgGEN`は、テキストプロンプトを使用して画像を生成するPythonスクリプトです。このスクリプトは、Hugging Faceの`transformers`と`diffusers`ライブラリを活用しており、GPU環境で最適に動作します。
 
 ## 環境構築
+### 0. ローカルでpromptを生成しておく
+レンタルGPU鯖上でもできますが、鯖代を節約したいのでローカルで事前にpromptを生成しておくといいです。
+```
+git clone https://github.com/tori29umai0123/dart-imgGEN.git
+cd dart-imgGEN
+python -m venv venv
+venv\Scripts\activate
+pip install torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 --index-url https://download.pytorch.org/whl/cu121
+pip install transformers
+```
+promptGEN.py <モデルの名前/PATH> <出力先> で生成
+```
+python promptGEN.py "D:/LLM/dart-v2-moe-sft" "E:/desktop/dart_prompts.txt"
+```
 
 ### 1. GPUサーバーのレンタル
 適切なGPUサーバー（例：Vast.ai）をレンタルしてください。
@@ -19,6 +33,9 @@ sudo apt update
 sudo apt install git-lfs
 git lfs install
 ```
+ついでにローカルで生成した場合はdart_prompts.txtも手動で鯖にアップロードしておく事<br>
+例：dart-imgGEN/dart_prompts.txt
+
 ### 4. Hugging Face アカウント設定
 
 1. アカウント作成

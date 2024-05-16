@@ -3,7 +3,8 @@
 
 ## 環境構築
 ### 0. ローカルでpromptを生成しておく
-レンタルGPU鯖上でもできますが、鯖代を節約したいのでローカルで事前にpromptを生成しておくといいです。
+レンタルGPU鯖上でもできますが、鯖代を節約したいのでローカルで事前にpromptを生成しておくといいです<br>
+時間の余裕があるときにやってください。
 ```
 git clone https://github.com/tori29umai0123/dart-imgGEN.git
 cd dart-imgGEN

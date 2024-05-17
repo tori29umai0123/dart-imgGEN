@@ -88,8 +88,8 @@ def process_prompts(prompt_txt_path, pipe, image_dir, caption_dir, repo_name, to
         image = make_image(pipe, main_prompt, negative_prompt, width, height)
         save_files(image, main_prompt, image_filename, image_dir, caption_dir)
 
-        # プロンプトの終わりに達したか、または5000個ごとにZIPファイルを作成し、アップロードします。
-        if index % 5000 == 9 or index == total_prompts - 1:
+        # 5000枚ごと、またはプロンプトの最後に達した時にZIPファイルを作成し、アップロードします。
+        if index % 5000 == 4999 or index == total_prompts - 1:  # 5000, 10000, 15000, ..., total_prompts-1
             zip_name = f"./data/images_{index // 5000 + 1}.zip"
             zip_path = create_zip(image_dir, caption_dir, zip_name)
             upload_to_hf(zip_path, repo_name, token)

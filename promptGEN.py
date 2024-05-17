@@ -49,7 +49,7 @@ def generate_prompts(model, output_file_path, NUM_PROMPTS_PER_VARIATION,  BATCH_
     YEAR_MODIFIERS = [None, "newest", "recent", "mid"]
     LENGTH_TAGS = ["<|length:very_short|>", "<|length:short|>", "<|length:medium|>", "<|length:long|>", "<|length:very_long|>"]
     QUALITY_MODIFIERS_AND_AESTHETIC = ["masterpiece", "best quality", "very aesthetic", "absurdres"]
-    NEGATIVE_PROMPT = "nsfw, lowres, (bad), text, error, fewer, extra, missing, worst quality, jpeg artifacts, low quality, watermark, unfinished, displeasing, oldest, early, chromatic aberration, signature, extra digits, artistic error, username, scan, [abstract]"
+    NEGATIVE_PROMPT = "nsfw, lowres, (bad), text, error, fewer, extra, missing, worst quality, jpeg artifacts, low quality, watermark, unfinished, displeasing, oldest, early, chromatic aberration, signature, extra digits, artistic error, username, scan, abstract"
 
     # プロンプトの生成ループ
     for rating_modifier, rating_tag in zip(RATING_MODIFIERS, RATING_TAGS):
